@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+
+puts "Please insert your e-mail"
+
+email = gets.chomp
+
+user = User.find_by email: email
+
+while user.nil?
+  puts "Invalid email, sign up first"
+  email = gets.chomp
+  user = User.find_by email: email
+end
+
+puts "Visit shortened url or create one (visit/new)"
+
+option = gets.chomp
+
+if option == "new"
+  puts "Enter URL:"
+  url = gets.chomp
+  # Launchy.open(url)
+  short_url = ShortenedUrl.generate_short_url({long_url: url, user_id: user.id})
+  short_url.save
+  Visit.record_visit!(user, short_url)
+  puts "Your URL is #{short_url.short_url}"
+else
+  puts user.submitted_urls.map { |url| url.short_url + "  =>  " + url.long_url }
+  puts "Pick a shortened URL:"
+  short_url = gets.chomp
+  url_obj = ShortenedUrl.find_by short_url: short_url
+  long_url = url_obj.long_url
+
+  Visit.record_visit!(user, url_obj)
+  Launchy.open(long_url)
+end
+
+
+#Launchy.open(url)
